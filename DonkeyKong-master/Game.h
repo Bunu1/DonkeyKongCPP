@@ -16,6 +16,7 @@ private:
 	void processEvents();
 	void update(sf::Time elapsedTime);
 	void render();
+	bool groundIsUnder(int limit, std::string direction);
 
 	void updateStatistics(sf::Time elapsedTime);
 	void handlePlayerInput(sf::Keyboard::Key key, bool isPressed);

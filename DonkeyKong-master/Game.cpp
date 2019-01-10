@@ -66,7 +66,7 @@ Game::Game()
 	mPlayer.setTexture(mTexture);
 	sf::Vector2f posMario;
 	posMario.x = 100.f + 70.f;
-	posMario.y = BLOCK_SPACE * 5 - _sizeMario.y;
+	posMario.y = BLOCK_SPACE * 5 - _sizeMario.y + 5;
 
 	mPlayer.setPosition(posMario);
 
@@ -129,6 +129,39 @@ void Game::processEvents()
 	}
 }
 
+bool Game::groundIsUnder(int limit, std::string direction) {
+	bool limitCondition;
+	for (std::shared_ptr<Entity> entity : EntityManager::m_Entities)
+	{
+		if (entity->m_enabled == false)
+		{
+			continue;
+		}
+
+		if (entity->m_type != EntityType::player)
+		{
+			continue;
+		}
+
+		std::cout << "MARIO POS : " << entity->m_sprite.getPosition().x << " " << entity->m_sprite.getPosition().y << "\n";
+		for (int i = 0; i < BLOCK_COUNT_X; i++)
+		{
+			for (int j = 0; j < BLOCK_COUNT_Y; j++)
+			{
+				std::cout << _Block[i][j].getPosition().y << "\n";
+				limitCondition = (direction == "right") ? entity->m_sprite.getPosition().x < limit : entity->m_sprite.getPosition().x >= limit;
+				if (limitCondition && _Block[i][j].getPosition().y - entity->m_sprite.getPosition().y <= 50 && _Block[i][j].getPosition().y - entity->m_sprite.getPosition().y >= 49) {
+					return true;
+				}
+			}
+		}
+	}
+
+
+	
+	return false;
+}
+
 void Game::update(sf::Time elapsedTime)
 {
 	sf::Vector2f movement(0.f, 0.f);
@@ -136,9 +169,9 @@ void Game::update(sf::Time elapsedTime)
 		movement.y -= PlayerSpeed;
 	if (mIsMovingDown)
 		movement.y += PlayerSpeed;
-	if (mIsMovingLeft)
+	if (mIsMovingLeft && groundIsUnder(170, "left"))
 		movement.x -= PlayerSpeed;
-	if (mIsMovingRight)
+	if (mIsMovingRight && groundIsUnder(685, "right"))
 		movement.x += PlayerSpeed;
 
 	for (std::shared_ptr<Entity> entity : EntityManager::m_Entities)
