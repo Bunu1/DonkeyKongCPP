@@ -22,8 +22,13 @@ Game::Game()
 	mWindow.setFramerateLimit(160);
 
 	// Draw blocks
+	for (int i = 0; i < std::size(DRAWABLES); i++)
+	{
+		std::cout << i << "\n";
+	}
 
-	_TextureBlock.loadFromFile("Media/Textures/Block.png");
+
+	_TextureBlock.loadFromFile("Media/Textures/Ground.png");
 	_sizeBlock = _TextureBlock.getSize();
 
 	for (int i = 0; i < BLOCK_COUNT_X; i++)
@@ -44,7 +49,7 @@ Game::Game()
 
 	// Draw Echelles
 
-	_TextureEchelle.loadFromFile("Media/Textures/Echelle.png");
+	_TextureEchelle.loadFromFile("Media/Textures/Ladder.png");
 
 	for (int i = 0; i < ECHELLE_COUNT; i++)
 	{

@@ -4,6 +4,8 @@
 #define BLOCK_COUNT_X 8
 #define BLOCK_COUNT_Y 5
 #define BLOCK_SPACE 110.f
+#define DRAWABLES {"Coin", "Donkey", "Flame_Enemy", "Ground", "Ladder", "Mario"}
+
 
 class Game
 {
@@ -16,6 +18,7 @@ private:
 	void processEvents();
 	void update(sf::Time elapsedTime);
 	void render();
+
 	bool groundIsUnder(int limit, std::string direction);
 
 	void updateStatistics(sf::Time elapsedTime);
