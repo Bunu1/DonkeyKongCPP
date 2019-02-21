@@ -1,10 +1,10 @@
 #pragma once
-
+#include "Entity.h"
 #define ECHELLE_COUNT 4
 #define BLOCK_COUNT_X 8
 #define BLOCK_COUNT_Y 5
 #define BLOCK_SPACE 110.f
-#define DRAWABLES {"Coin", "Donkey", "Flame_Enemy", "Ground", "Ladder", "Mario"}
+#define FLAME_ENEMY_COUNT 5
 
 
 class Game
@@ -23,6 +23,9 @@ private:
 
 	void updateStatistics(sf::Time elapsedTime);
 	void handlePlayerInput(sf::Keyboard::Key key, bool isPressed);
+	std::shared_ptr<Entity> initialiseEntityClass(std::string);
+	EntityType initialiseEntityType(std::string);
+	void drawSprite(std::vector<std::string>, std::vector<int>, std::vector<float>, std::vector<float>, sf::Sprite, sf::Vector2u);
 
 private:
 	static const float		PlayerSpeed;
@@ -40,6 +43,15 @@ private:
 	bool mIsMovingDown;
 	bool mIsMovingRight;
 	bool mIsMovingLeft;
+
+
+	std::vector<std::string> drawables = { "Coin", "Donkey", "Flame_Enemy", "Ground", "Ladder", "Mario" };
+	std::vector<int> drawables_count = { 1,1,FLAME_ENEMY_COUNT,BLOCK_COUNT_X*BLOCK_COUNT_Y, ECHELLE_COUNT, 1 };
+	std::vector<float> first_x_positions = { 0 , 0 , 0, 100.f + 70.f , };
+	std::vector<float> first_y_positions = { 0 , 0 , 0 };
+	std::vector<sf::Texture> textures;
+	std::vector<sf::Sprite> sprites;
+	std::vector<sf::Vector2u> sprites_sizes;
 
 	sf::Texture	_TextureEchelle;
 	sf::Sprite	_Echelle[ECHELLE_COUNT];

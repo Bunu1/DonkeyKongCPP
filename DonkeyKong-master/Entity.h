@@ -4,8 +4,15 @@ enum EntityType
 {
 	player,
 	block,
-	echelle
+	echelle,
+	Coin,
+	Donkey,
+	Flame_Enemy,
+	Ground,
+	Ladder,
+	Mario
 };
+
 
 class Entity
 {
@@ -37,4 +44,3 @@ public:
 	bool m_bLeftToRight = true;
 	int m_times = 0;
 };
-

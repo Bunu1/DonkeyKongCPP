@@ -1,7 +1,7 @@
 #pragma once
 #include "Entity.h"
 
-class Environment : Entity
+class Environment : public Entity
 {
 public:
 	Environment();

@@ -1,7 +1,7 @@
 #pragma once
 #include "Environment.h"
 
-class Ground : Environment
+class Ground : public Environment
 {
 public:
 	Ground();

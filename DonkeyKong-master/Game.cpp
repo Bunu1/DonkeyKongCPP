@@ -2,6 +2,12 @@
 #include "StringHelpers.h"
 #include "Game.h"
 #include "EntityManager.h"
+#include "Coin.h"
+#include "Donkey.h"
+#include "Flame_Enemy.h"
+#include "Ground.h"
+#include "Ladder.h"
+#include "Mario.h"
 
 const float Game::PlayerSpeed = 100.f;
 const sf::Time Game::TimePerFrame = sf::seconds(1.f / 60.f);
@@ -21,11 +27,36 @@ Game::Game()
 {
 	mWindow.setFramerateLimit(160);
 
-	// Draw blocks
-	for (int i = 0; i < std::size(DRAWABLES); i++)
+	// Load Sprites and Draws correct number of each Sprites
+	for (int i = 0; i < std::size(drawables); i++)
 	{
-		std::cout << i << "\n";
+		std::stringstream ss;
+		sf::Texture texture;
+		texture.loadFromFile("Media/Textures/" + drawables[i] + "png");
+
+		sf::Vector2u size;
+		size = texture.getSize();
+
+		sf::Sprite sprite;
+		sprite.setTexture(texture);
+
+
+		textures.push_back(texture);
+		sprites_sizes.push_back(size);
+
+		drawSprite(drawables, drawables_count, first_x_positions, first_y_positions, sprite, size);
+
+		for (int i = 0; i < drawables_count[i]; i++) {
+			std::shared_ptr<class Flame_Enemy> se2 = std::make_shared<class Flame_Enemy>();
+
+			std::shared_ptr<Entity> se = initialiseEntityClass(drawables[i]);
+			se->m_sprite = sprite;
+			se->m_type = initialiseEntityType(drawables[i]);
+		}
 	}
+
+
+
 
 
 	_TextureBlock.loadFromFile("Media/Textures/Ground.png");
@@ -251,5 +282,77 @@ void Game::handlePlayerInput(sf::Keyboard::Key key, bool isPressed)
 
 	if (key == sf::Keyboard::Space)
 	{
+	}
+}
+
+
+std::shared_ptr<Entity> initialiseEntityClass(std::string s) {
+	if (s == "Coin") 
+	{
+		return std::make_shared<class Coin>();
+	}
+	else if (s == "Donkey")
+	{
+		return std::make_shared<class Donkey>();
+	}
+	else if (s == "Flame_Enemy")
+	{
+		return std::make_shared<class Flame_Enemy>();
+	}
+	else if (s == "Ground")
+	{
+		return std::make_shared<class Ground>();
+	}
+	else if (s == "Ladder")
+	{
+		return std::make_shared<class Ladder>();
+	}
+	else if (s == "Mario")
+	{
+		return std::make_shared<class Mario>();
+	}
+	return;
+}
+
+EntityType initialiseEntityType(std::string s)
+{
+	if (s == "Coin")
+	{
+		return EntityType::Coin;
+	}
+	else if (s == "Donkey")
+	{
+		return EntityType::Donkey;
+	}
+	else if (s == "Flame_Enemy")
+	{
+		return EntityType::Flame_Enemy;
+	}
+	else if (s == "Ground")
+	{
+		return EntityType::Ground;
+	}
+	else if (s == "Ladder")
+	{
+		return EntityType::Ladder;
+	}
+	else if (s == "Mario")
+	{
+		return EntityType::Mario;
+	}
+	return;
+}
+
+void drawSprite(std::vector<std::string> drawables, std::vector<int> drawables_count, std::vector<float> first_x_positions, std::vector<float> first_y_positions, sf::Sprite sprite, sf::Vector2u size)
+{
+	
+	for (int i = 0; i < drawables_count[i]; i++) {
+		std::shared_ptr<class Flame_Enemy> se2 = std::make_shared<class Flame_Enemy>();
+
+		std::shared_ptr<Entity> se = initialiseEntityClass(drawables[i]);
+		se->m_sprite = sprite;
+		se->m_type = initialiseEntityType(drawables[i]);
+
+		//EntityManager::m_Entities.push_back(se);
 	}
 }
