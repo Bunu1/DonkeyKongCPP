@@ -27,12 +27,14 @@ Game::Game()
 {
 	mWindow.setFramerateLimit(160);
 
+	setLayout();
+
 	// Load Sprites and Draws correct number of each Sprites
 	for (int i = 0; i < std::size(drawables); i++)
 	{
 		std::stringstream ss;
 		sf::Texture texture;
-		texture.loadFromFile("Media/Textures/" + drawables[i] + "png");
+		texture.loadFromFile("Media/Textures/SQ" + drawables[i] + ".png");
 
 		sf::Vector2u size;
 		size = texture.getSize();
@@ -40,25 +42,12 @@ Game::Game()
 		sf::Sprite sprite;
 		sprite.setTexture(texture);
 
-
 		textures.push_back(texture);
 		sprites_sizes.push_back(size);
-
-		drawSprite(drawables, drawables_count, first_x_positions, first_y_positions, sprite, size);
-
-		for (int i = 0; i < drawables_count[i]; i++) {
-			std::shared_ptr<class Flame_Enemy> se2 = std::make_shared<class Flame_Enemy>();
-
-			std::shared_ptr<Entity> se = initialiseEntityClass(drawables[i]);
-			se->m_sprite = sprite;
-			se->m_type = initialiseEntityType(drawables[i]);
-		}
+		sprites.push_back(sprite);
 	}
-
-
-
-
-
+	drawSprite();
+	/*
 	_TextureBlock.loadFromFile("Media/Textures/Ground.png");
 	_sizeBlock = _TextureBlock.getSize();
 
@@ -85,7 +74,7 @@ Game::Game()
 	for (int i = 0; i < ECHELLE_COUNT; i++)
 	{
 		_Echelle[i].setTexture(_TextureEchelle);
-		_Echelle[i].setPosition(100.f + 70.f * (i + 1), 0.f + BLOCK_SPACE * (i + 1) + _sizeBlock.y );
+		_Echelle[i].setPosition(100.f + 70.f * (i + 1), 0.f + BLOCK_SPACE * (i + 1) + _sizeBlock.y);
 
 		std::shared_ptr<Entity> se = std::make_shared<Entity>();
 		se->m_sprite = _Echelle[i];
@@ -112,7 +101,7 @@ Game::Game()
 	player->m_size = mTexture.getSize();
 	player->m_position = mPlayer.getPosition();
 	EntityManager::m_Entities.push_back(player);
-
+	*/
 	// Draw Statistic Font 
 
 	mFont.loadFromFile("Media/Sansation.ttf");
@@ -174,7 +163,7 @@ bool Game::groundIsUnder(int limit, std::string direction) {
 			continue;
 		}
 
-		if (entity->m_type != EntityType::player)
+		if (entity->m_type != EntityType::Mario)
 		{
 			continue;
 		}
@@ -194,7 +183,7 @@ bool Game::groundIsUnder(int limit, std::string direction) {
 	}
 
 
-	
+
 	return false;
 }
 
@@ -217,7 +206,7 @@ void Game::update(sf::Time elapsedTime)
 			continue;
 		}
 
-		if (entity->m_type != EntityType::player)
+		if (entity->m_type != EntityType::Mario)
 		{
 			continue;
 		}
@@ -285,9 +274,26 @@ void Game::handlePlayerInput(sf::Keyboard::Key key, bool isPressed)
 	}
 }
 
+void Game::setLayout()
+{
+	std::string STRING;
+	std::ifstream infile("level.ini");
+	int line = 0;
+	while (getline(infile, STRING))
+	{
+		int col = 0;
+		for (int i = 0; i < STRING.length(); i=i+2) {
+			levelMatrix[line][col] = STRING[i] - '0';
 
-std::shared_ptr<Entity> initialiseEntityClass(std::string s) {
-	if (s == "Coin") 
+			col++;
+		}
+		line++;
+	}
+	infile.close();
+} 
+
+std::shared_ptr<Entity> Game::initialiseEntityClass(std::string s) {
+	if (s == "Coin")
 	{
 		return std::make_shared<class Coin>();
 	}
@@ -311,10 +317,10 @@ std::shared_ptr<Entity> initialiseEntityClass(std::string s) {
 	{
 		return std::make_shared<class Mario>();
 	}
-	return;
+	return std::make_shared<class Entity>();
 }
 
-EntityType initialiseEntityType(std::string s)
+EntityType Game::initialiseEntityType(std::string s)
 {
 	if (s == "Coin")
 	{
@@ -340,19 +346,86 @@ EntityType initialiseEntityType(std::string s)
 	{
 		return EntityType::Mario;
 	}
-	return;
+	return EntityType::Ground;
 }
 
-void drawSprite(std::vector<std::string> drawables, std::vector<int> drawables_count, std::vector<float> first_x_positions, std::vector<float> first_y_positions, sf::Sprite sprite, sf::Vector2u size)
+void Game::drawSprite()
 {
-	
-	for (int i = 0; i < drawables_count[i]; i++) {
-		std::shared_ptr<class Flame_Enemy> se2 = std::make_shared<class Flame_Enemy>();
-
-		std::shared_ptr<Entity> se = initialiseEntityClass(drawables[i]);
-		se->m_sprite = sprite;
-		se->m_type = initialiseEntityType(drawables[i]);
-
-		//EntityManager::m_Entities.push_back(se);
+	//std::cout << sizeof(levelMatrix) / sizeof(levelMatrix[0]) << " ";
+	for (int i = 0; i < (sizeof(levelMatrix) / sizeof(levelMatrix[0])); i++)
+	{
+		for (int j = 0; j < (sizeof(levelMatrix) / sizeof(levelMatrix[0])); j++)
+		{
+			if (levelMatrix[i][j] > 0) 
+			{
+				if (drawables[levelMatrix[i][j] - 1] == "Coin")
+				{
+					std::shared_ptr<class Coin> se = std::make_shared<class Coin>();
+					sprites[levelMatrix[i][j] - 1].setTexture(textures[levelMatrix[i][j] - 1]);
+					se->m_sprite = sprites[levelMatrix[i][j] - 1];
+					se->m_type = initialiseEntityType(drawables[levelMatrix[i][j] - 1]);
+					se->m_size = sprites_sizes[levelMatrix[i][j] - 1];
+					sprites[levelMatrix[i][j] - 1].setPosition(21.f * j, 15.f * i);
+					se->m_position = sprites[levelMatrix[i][j] - 1].getPosition();
+					EntityManager::m_Entities.push_back(se);
+				}
+				else if (drawables[levelMatrix[i][j] - 1] == "Donkey")
+				{
+					std::shared_ptr<class Donkey> se = std::make_shared<class Donkey>();
+					sprites[levelMatrix[i][j] - 1].setTexture(textures[levelMatrix[i][j] - 1]);
+					se->m_sprite = sprites[levelMatrix[i][j] - 1];
+					se->m_type = initialiseEntityType(drawables[levelMatrix[i][j] - 1]);
+					se->m_size = sprites_sizes[levelMatrix[i][j] - 1];
+					sprites[levelMatrix[i][j] - 1].setPosition(21.f * j, 15.f * i);
+					se->m_position = sprites[levelMatrix[i][j] - 1].getPosition();
+					EntityManager::m_Entities.push_back(se);
+				}
+				else if (drawables[levelMatrix[i][j] - 1] == "Flame_Enemy")
+				{
+					std::shared_ptr<class Flame_Enemy> se = std::make_shared<class Flame_Enemy>();
+					sprites[levelMatrix[i][j] - 1].setTexture(textures[levelMatrix[i][j] - 1]);
+					se->m_sprite = sprites[levelMatrix[i][j] - 1];
+					se->m_type = initialiseEntityType(drawables[levelMatrix[i][j] - 1]);
+					se->m_size = sprites_sizes[levelMatrix[i][j] - 1];
+					sprites[levelMatrix[i][j] - 1].setPosition(21.f * j, 15.f * i);
+					se->m_position = sprites[levelMatrix[i][j] - 1].getPosition();
+					EntityManager::m_Entities.push_back(se);
+				}
+				else if (drawables[levelMatrix[i][j] - 1] == "Ground")
+				{
+					std::shared_ptr<class Ground> se = std::make_shared<class Ground>();
+					sprites[levelMatrix[i][j] - 1].setTexture(textures[levelMatrix[i][j] - 1]);
+					se->m_sprite = sprites[levelMatrix[i][j] - 1];
+					se->m_type = initialiseEntityType(drawables[levelMatrix[i][j] - 1]);
+					se->m_size = sprites_sizes[levelMatrix[i][j] - 1];
+					sprites[levelMatrix[i][j] - 1].setPosition(21.f * j, 15.f * i);
+					se->m_position = sprites[levelMatrix[i][j] - 1].getPosition();
+					EntityManager::m_Entities.push_back(se);
+				}
+				else if (drawables[levelMatrix[i][j] - 1] == "Ladder")
+				{
+					std::shared_ptr<class Ladder> se = std::make_shared<class Ladder>();
+					sprites[levelMatrix[i][j] - 1].setTexture(textures[levelMatrix[i][j] - 1]);
+					se->m_sprite = sprites[levelMatrix[i][j] - 1];
+					se->m_type = initialiseEntityType(drawables[levelMatrix[i][j] - 1]);
+					se->m_size = sprites_sizes[levelMatrix[i][j] - 1];
+					sprites[levelMatrix[i][j] - 1].setPosition(21.f * j, 15.f * i);
+					se->m_position = sprites[levelMatrix[i][j] - 1].getPosition();
+					EntityManager::m_Entities.push_back(se);
+				}
+				else if (drawables[levelMatrix[i][j] - 1] == "Mario")
+				{
+					std::cout << i << " " << j << " mario";
+					std::shared_ptr<class Mario> se = std::make_shared<class Mario>();
+					sprites[levelMatrix[i][j] - 1].setTexture(textures[levelMatrix[i][j] - 1]);
+					se->m_sprite = sprites[levelMatrix[i][j] - 1];
+					se->m_type = initialiseEntityType(drawables[levelMatrix[i][j] - 1]);
+					se->m_size = sprites_sizes[levelMatrix[i][j] - 1];
+					sprites[levelMatrix[i][j] - 1].setPosition(21.f * j, 15.f * i);
+					se->m_position = sprites[levelMatrix[i][j] - 1].getPosition();
+					EntityManager::m_Entities.push_back(se);
+				}
+			}
+		}
 	}
 }

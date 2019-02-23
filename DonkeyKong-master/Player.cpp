@@ -4,6 +4,7 @@
 
 Player::Player()
 {
+	m_enabled = true;
 }
 
 
