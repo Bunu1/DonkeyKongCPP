@@ -2,9 +2,9 @@
 
 enum EntityType
 {
-	player,
-	block,
-	echelle,
+	Player,
+	Environment,
+	Enemy,
 	Coin,
 	Donkey,
 	Flame_Enemy,

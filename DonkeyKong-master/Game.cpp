@@ -10,6 +10,8 @@
 #include "Mario.h"
 
 const float Game::PlayerSpeed = 100.f;
+const float Game::EnemySpeed = 50.f;
+const float Game::FallSpeed = 75.f;
 const sf::Time Game::TimePerFrame = sf::seconds(1.f / 60.f);
 
 Game::Game()
@@ -26,10 +28,11 @@ Game::Game()
 	, mIsMovingLeft(false)
 {
 	mWindow.setFramerateLimit(160);
-
+	
+	//Load level from configuration file
 	setLayout();
 
-	// Load Sprites and Draws correct number of each Sprites
+	// Load Sprites, Texures and Sizes
 	for (int i = 0; i < std::size(drawables); i++)
 	{
 		std::stringstream ss;
@@ -47,61 +50,6 @@ Game::Game()
 		sprites.push_back(sprite);
 	}
 	drawSprite();
-	/*
-	_TextureBlock.loadFromFile("Media/Textures/Ground.png");
-	_sizeBlock = _TextureBlock.getSize();
-
-	for (int i = 0; i < BLOCK_COUNT_X; i++)
-	{
-		for (int j = 0; j < BLOCK_COUNT_Y; j++)
-		{
-			_Block[i][j].setTexture(_TextureBlock);
-			_Block[i][j].setPosition(100.f + 70.f * (i + 1), 0.f + BLOCK_SPACE * (j + 1));
-
-			std::shared_ptr<Entity> se = std::make_shared<Entity>();
-			se->m_sprite = _Block[i][j];
-			se->m_type = EntityType::block;
-			se->m_size = _TextureBlock.getSize();
-			se->m_position = _Block[i][j].getPosition();
-			EntityManager::m_Entities.push_back(se);
-		}
-	}
-
-	// Draw Echelles
-
-	_TextureEchelle.loadFromFile("Media/Textures/Ladder.png");
-
-	for (int i = 0; i < ECHELLE_COUNT; i++)
-	{
-		_Echelle[i].setTexture(_TextureEchelle);
-		_Echelle[i].setPosition(100.f + 70.f * (i + 1), 0.f + BLOCK_SPACE * (i + 1) + _sizeBlock.y);
-
-		std::shared_ptr<Entity> se = std::make_shared<Entity>();
-		se->m_sprite = _Echelle[i];
-		se->m_type = EntityType::echelle;
-		se->m_size = _TextureEchelle.getSize();
-		se->m_position = _Echelle[i].getPosition();
-		EntityManager::m_Entities.push_back(se);
-	}
-
-	// Draw Mario
-
-	mTexture.loadFromFile("Media/Textures/Mario_small_transparent.png"); // Mario_small.png");
-	_sizeMario = mTexture.getSize();
-	mPlayer.setTexture(mTexture);
-	sf::Vector2f posMario;
-	posMario.x = 100.f + 70.f;
-	posMario.y = BLOCK_SPACE * 5 - _sizeMario.y + 5;
-
-	mPlayer.setPosition(posMario);
-
-	std::shared_ptr<Entity> player = std::make_shared<Entity>();
-	player->m_sprite = mPlayer;
-	player->m_type = EntityType::player;
-	player->m_size = mTexture.getSize();
-	player->m_position = mPlayer.getPosition();
-	EntityManager::m_Entities.push_back(player);
-	*/
 	// Draw Statistic Font 
 
 	mFont.loadFromFile("Media/Sansation.ttf");
@@ -135,6 +83,7 @@ void Game::run()
 void Game::processEvents()
 {
 	sf::Event event;
+	sf::Vector2f movement(0.f, 0.f);
 	while (mWindow.pollEvent(event))
 	{
 		switch (event.type)
@@ -154,37 +103,44 @@ void Game::processEvents()
 	}
 }
 
-bool Game::groundIsUnder(int limit, std::string direction) {
-	bool limitCondition;
-	for (std::shared_ptr<Entity> entity : EntityManager::m_Entities)
+bool Game::groundIsUnder() {
+	sf::FloatRect ground;
+	for (std::shared_ptr<Entity> mario : EntityManager::GetEntitiesGroup("Player"))
 	{
-		if (entity->m_enabled == false)
+		sf::FloatRect posMario = mario->m_sprite.getGlobalBounds();
+		//posMario.y = mario->m_sprite.getPosition().y;
+		for (std::shared_ptr<Entity> entity : EntityManager::GetEntitiesGroup("Environment"))
 		{
-			continue;
-		}
-
-		if (entity->m_type != EntityType::Mario)
-		{
-			continue;
-		}
-
-		std::cout << "MARIO POS : " << entity->m_sprite.getPosition().x << " " << entity->m_sprite.getPosition().y << "\n";
-		for (int i = 0; i < BLOCK_COUNT_X; i++)
-		{
-			for (int j = 0; j < BLOCK_COUNT_Y; j++)
+			if (entity->m_type == EntityType::Ground || entity->m_type == EntityType::Ladder)
 			{
-				std::cout << _Block[i][j].getPosition().y << "\n";
-				limitCondition = (direction == "right") ? entity->m_sprite.getPosition().x < limit : entity->m_sprite.getPosition().x >= limit;
-				if (limitCondition && _Block[i][j].getPosition().y - entity->m_sprite.getPosition().y <= 50 && _Block[i][j].getPosition().y - entity->m_sprite.getPosition().y >= 49) {
-					return true;
-				}
+				//ground.x = entity->m_sprite.getPosition().x;
+				//ground.y = entity->m_sprite.getPosition().y;
+				//std::cout << (int)(ground.y - posMario.y) % 15 << "\n";
+
+				ground = entity->m_sprite.getGlobalBounds();
+
+				/*if (abs((int)(ground.y - posMario.y) % 15) == 2)
+					if(abs((int)(ground.x - posMario.x)) < 42)
+						return true;*/
+				if(ground.intersects(posMario))return true;
 			}
 		}
 	}
-
-
-
 	return false;
+}
+
+
+float Game::getCountablePos(sf::Sprite sp, std::string s) {
+	sf::Vector2f position = sp.getPosition();
+	if (s == "x")
+	{
+		return position.x;
+	}
+	else if (s == "y")
+	{
+		return position.y;
+	}
+	return 0.f;
 }
 
 void Game::update(sf::Time elapsedTime)
@@ -194,24 +150,42 @@ void Game::update(sf::Time elapsedTime)
 		movement.y -= PlayerSpeed;
 	if (mIsMovingDown)
 		movement.y += PlayerSpeed;
-	if (mIsMovingLeft && groundIsUnder(170, "left"))
+	if (mIsMovingLeft)
 		movement.x -= PlayerSpeed;
-	if (mIsMovingRight && groundIsUnder(685, "right"))
+	if (mIsMovingRight)
 		movement.x += PlayerSpeed;
 
-	for (std::shared_ptr<Entity> entity : EntityManager::m_Entities)
+	//gravity
+	if(!groundIsUnder())
+		movement.y += FallSpeed;
+	if (groundIsUnder())
+		std::cout << "SAAS" << "\n";
+
+	for (std::shared_ptr<Entity> entity : EntityManager::GetEntitiesGroup("Player"))
 	{
-		if (entity->m_enabled == false)
+		if (entity->m_enabled)
 		{
-			continue;
+			entity->m_sprite.move(movement * elapsedTime.asSeconds());
+			entity->m_sprite.setPosition(abs((int)entity->m_sprite.getPosition().x % 840), abs((int)entity->m_sprite.getPosition().y % 600));
 		}
-
-		if (entity->m_type != EntityType::Mario)
+		
+	}
+	for (std::shared_ptr<Entity> entity : EntityManager::GetEntitiesGroup("Environment"))
+	{
+		//if(entity->m_type == EntityType::Donkey)
+		//std::cout << entity->m_type << "\n";
+	}
+	for (std::shared_ptr<Entity> entity : EntityManager::GetEntitiesGroup("Enemy"))
+	{
+		if (entity->m_type == EntityType::Donkey)
 		{
-			continue;
-		}
 
-		entity->m_sprite.move(movement * elapsedTime.asSeconds());
+		}
+		else {
+
+		}
+		//if(entity->m_type == EntityType::Donkey)
+		//std::cout << entity->m_type << "\n";
 	}
 }
 
@@ -362,10 +336,10 @@ void Game::drawSprite()
 				{
 					std::shared_ptr<class Coin> se = std::make_shared<class Coin>();
 					sprites[levelMatrix[i][j] - 1].setTexture(textures[levelMatrix[i][j] - 1]);
+					sprites[levelMatrix[i][j] - 1].setPosition(21.f * j, 15.f * i);
 					se->m_sprite = sprites[levelMatrix[i][j] - 1];
 					se->m_type = initialiseEntityType(drawables[levelMatrix[i][j] - 1]);
 					se->m_size = sprites_sizes[levelMatrix[i][j] - 1];
-					sprites[levelMatrix[i][j] - 1].setPosition(21.f * j, 15.f * i);
 					se->m_position = sprites[levelMatrix[i][j] - 1].getPosition();
 					EntityManager::m_Entities.push_back(se);
 				}
@@ -373,10 +347,10 @@ void Game::drawSprite()
 				{
 					std::shared_ptr<class Donkey> se = std::make_shared<class Donkey>();
 					sprites[levelMatrix[i][j] - 1].setTexture(textures[levelMatrix[i][j] - 1]);
+					sprites[levelMatrix[i][j] - 1].setPosition(21.f * j, 15.f * i);
 					se->m_sprite = sprites[levelMatrix[i][j] - 1];
 					se->m_type = initialiseEntityType(drawables[levelMatrix[i][j] - 1]);
 					se->m_size = sprites_sizes[levelMatrix[i][j] - 1];
-					sprites[levelMatrix[i][j] - 1].setPosition(21.f * j, 15.f * i);
 					se->m_position = sprites[levelMatrix[i][j] - 1].getPosition();
 					EntityManager::m_Entities.push_back(se);
 				}
@@ -384,10 +358,10 @@ void Game::drawSprite()
 				{
 					std::shared_ptr<class Flame_Enemy> se = std::make_shared<class Flame_Enemy>();
 					sprites[levelMatrix[i][j] - 1].setTexture(textures[levelMatrix[i][j] - 1]);
+					sprites[levelMatrix[i][j] - 1].setPosition(21.f * j, 15.f * i);
 					se->m_sprite = sprites[levelMatrix[i][j] - 1];
 					se->m_type = initialiseEntityType(drawables[levelMatrix[i][j] - 1]);
 					se->m_size = sprites_sizes[levelMatrix[i][j] - 1];
-					sprites[levelMatrix[i][j] - 1].setPosition(21.f * j, 15.f * i);
 					se->m_position = sprites[levelMatrix[i][j] - 1].getPosition();
 					EntityManager::m_Entities.push_back(se);
 				}
@@ -395,10 +369,10 @@ void Game::drawSprite()
 				{
 					std::shared_ptr<class Ground> se = std::make_shared<class Ground>();
 					sprites[levelMatrix[i][j] - 1].setTexture(textures[levelMatrix[i][j] - 1]);
+					sprites[levelMatrix[i][j] - 1].setPosition(21.f * j, 15.f * i);
 					se->m_sprite = sprites[levelMatrix[i][j] - 1];
 					se->m_type = initialiseEntityType(drawables[levelMatrix[i][j] - 1]);
 					se->m_size = sprites_sizes[levelMatrix[i][j] - 1];
-					sprites[levelMatrix[i][j] - 1].setPosition(21.f * j, 15.f * i);
 					se->m_position = sprites[levelMatrix[i][j] - 1].getPosition();
 					EntityManager::m_Entities.push_back(se);
 				}
@@ -406,22 +380,22 @@ void Game::drawSprite()
 				{
 					std::shared_ptr<class Ladder> se = std::make_shared<class Ladder>();
 					sprites[levelMatrix[i][j] - 1].setTexture(textures[levelMatrix[i][j] - 1]);
+					sprites[levelMatrix[i][j] - 1].setPosition(21.f * j, 15.f * i);
 					se->m_sprite = sprites[levelMatrix[i][j] - 1];
 					se->m_type = initialiseEntityType(drawables[levelMatrix[i][j] - 1]);
 					se->m_size = sprites_sizes[levelMatrix[i][j] - 1];
-					sprites[levelMatrix[i][j] - 1].setPosition(21.f * j, 15.f * i);
 					se->m_position = sprites[levelMatrix[i][j] - 1].getPosition();
 					EntityManager::m_Entities.push_back(se);
 				}
 				else if (drawables[levelMatrix[i][j] - 1] == "Mario")
 				{
-					std::cout << i << " " << j << " mario";
-					std::shared_ptr<class Mario> se = std::make_shared<class Mario>();
+					
+					std::shared_ptr<class Ladder> se = std::make_shared<class Ladder>();
 					sprites[levelMatrix[i][j] - 1].setTexture(textures[levelMatrix[i][j] - 1]);
+					sprites[levelMatrix[i][j] - 1].setPosition(21.f * j, 15.f * i);
 					se->m_sprite = sprites[levelMatrix[i][j] - 1];
 					se->m_type = initialiseEntityType(drawables[levelMatrix[i][j] - 1]);
 					se->m_size = sprites_sizes[levelMatrix[i][j] - 1];
-					sprites[levelMatrix[i][j] - 1].setPosition(21.f * j, 15.f * i);
 					se->m_position = sprites[levelMatrix[i][j] - 1].getPosition();
 					EntityManager::m_Entities.push_back(se);
 				}

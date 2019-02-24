@@ -24,14 +24,17 @@ private:
 	void updateStatistics(sf::Time elapsedTime);
 	void handlePlayerInput(sf::Keyboard::Key key, bool isPressed);
 
-	bool groundIsUnder(int limit, std::string direction);
+	bool groundIsUnder();
 	std::shared_ptr<Entity> initialiseEntityClass(std::string);
 	EntityType initialiseEntityType(std::string);
 	void drawSprite();
 	void setLayout();
+	float getCountablePos(sf::Sprite, std::string);
 
 private:
 	static const float		PlayerSpeed;
+	static const float		EnemySpeed;
+	static const float		FallSpeed;
 	static const sf::Time	TimePerFrame;
 
 	sf::RenderWindow		mWindow;
@@ -48,7 +51,6 @@ private:
 	bool mIsMovingLeft;
 
 	std::vector<std::string> drawables = { "Coin", "Donkey", "Flame_Enemy", "Ground", "Ladder", "Mario" };
-	std::vector<int> drawables_count = { 1,1,FLAME_ENEMY_COUNT,BLOCK_COUNT_X*BLOCK_COUNT_Y, ECHELLE_COUNT, 1 };
 	std::vector<sf::Texture> textures;
 	std::vector<sf::Sprite> sprites;
 	std::vector<sf::Vector2u> sprites_sizes;
