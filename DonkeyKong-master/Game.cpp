@@ -9,7 +9,7 @@
 #include "Ladder.h"
 #include "Mario.h"
 
-const float Game::PlayerSpeed = 125.f;
+const float Game::PlayerSpeed = 135.f;
 const float Game::EnemySpeed = 50.f;
 const float Game::FallSpeed = 200.f;
 const float Game::JumpSpeed = 10.f;
@@ -138,6 +138,35 @@ bool Game::isNearLadder() {
 	return false;
 }
 
+bool Game::foeGravity() {
+	sf::FloatRect ground;
+	int i = 0;
+	for (std::shared_ptr<Entity> mario : EntityManager::GetEntitiesGroup("Enemy"))
+	{
+
+		sf::FloatRect posMario = mario->m_sprite.getGlobalBounds();
+		if (mario->m_type != EntityType::Donkey)
+		{
+			for (std::shared_ptr<Entity> entity : EntityManager::GetEntitiesGroup("Environment"))
+			{
+
+				if (entity->m_type == EntityType::Ground)
+				{
+					ground = entity->m_sprite.getGlobalBounds();
+					if (ground.intersects(posMario))
+					{
+						if (!i)i++;
+						else
+							return true;
+					}
+				}
+			}
+		}
+		
+	}
+	return false;
+}
+
 
 
 float Game::getCountablePos(sf::Sprite sp, std::string s) {
@@ -156,12 +185,8 @@ float Game::getCountablePos(sf::Sprite sp, std::string s) {
 void Game::update(sf::Time elapsedTime)
 {
 	sf::Vector2f movement(0.f, 0.f);
-	//
-	if (mIsMovingLeft)
-		movement.x -= PlayerSpeed;
-	if (mIsMovingRight)
-		movement.x += PlayerSpeed;
 
+	sf::Vector2f movementFoe(0.f, 0.f);
 	//gravity
 	if (!groundIsUnder())
 	{
@@ -169,6 +194,17 @@ void Game::update(sf::Time elapsedTime)
 			movement.y -= PlayerSpeed;
 		movement.y += FallSpeed;
 	}
+
+	//foeGravity
+	/*if (!foeGravity())
+	{
+		movementFoe.y += FallSpeed;
+	}*/
+
+	if (mIsMovingLeft)
+		movement.x -= PlayerSpeed;
+	if (mIsMovingRight)
+		movement.x += PlayerSpeed;
 
 	//Ladder movements
 	if (isNearLadder())
@@ -187,7 +223,6 @@ void Game::update(sf::Time elapsedTime)
 	}
 
 
-
 	for (std::shared_ptr<Entity> entity : EntityManager::GetEntitiesGroup("Player"))
 	{
 		if (entity->m_enabled)
@@ -200,9 +235,6 @@ void Game::update(sf::Time elapsedTime)
 		}
 		
 	}
-	for (std::shared_ptr<Entity> entity : EntityManager::GetEntitiesGroup("Environment"))
-	{
-	}
 	for (std::shared_ptr<Entity> entity : EntityManager::GetEntitiesGroup("Enemy"))
 	{
 		if (entity->m_type == EntityType::Donkey)
@@ -210,7 +242,15 @@ void Game::update(sf::Time elapsedTime)
 
 		}
 		else {
-
+			/*if (rand()%2 == 0)
+				movementFoe.x += EnemySpeed * (0.8 + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (1.6 - 0.4))));
+			else
+				movementFoe.x -= EnemySpeed * (0.4 + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (1.6 - 0.4))));
+			entity->m_sprite.move(movementFoe * elapsedTime.asSeconds());
+			if (entity->m_sprite.getPosition().x > 840 || entity->m_sprite.getPosition().x < 0)
+				entity->m_sprite.setPosition(abs((int)entity->m_sprite.getPosition().x % 840), entity->m_sprite.getPosition().y);
+			if (entity->m_sprite.getPosition().y > 600 || entity->m_sprite.getPosition().y < 0)
+				entity->m_sprite.setPosition(entity->m_sprite.getPosition().x, abs((int)entity->m_sprite.getPosition().y % 600));*/
 		}
 	}
 }

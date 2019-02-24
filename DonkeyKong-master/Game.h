@@ -26,6 +26,7 @@ private:
 
 	bool groundIsUnder();
 	bool isNearLadder();
+	bool foeGravity();
 	std::shared_ptr<Entity> initialiseEntityClass(std::string);
 	EntityType initialiseEntityType(std::string);
 	void drawSprite();
@@ -57,13 +58,5 @@ private:
 	std::vector<sf::Texture> textures;
 	std::vector<sf::Sprite> sprites;
 	std::vector<sf::Vector2u> sprites_sizes;
-
-	sf::Texture	_TextureEchelle;
-	sf::Sprite	_Echelle[ECHELLE_COUNT];
-	sf::Texture	_TextureBlock;
-	sf::Sprite	_Block[BLOCK_COUNT_X][BLOCK_COUNT_Y];
-	sf::Texture	_TextureWeapon;
-	sf::Sprite	_Weapon;
-	sf::Vector2u _sizeMario;
 };
 
