@@ -9,9 +9,10 @@
 #include "Ladder.h"
 #include "Mario.h"
 
-const float Game::PlayerSpeed = 100.f;
+const float Game::PlayerSpeed = 125.f;
 const float Game::EnemySpeed = 50.f;
-const float Game::FallSpeed = 75.f;
+const float Game::FallSpeed = 200.f;
+const float Game::JumpSpeed = 10.f;
 const sf::Time Game::TimePerFrame = sf::seconds(1.f / 60.f);
 
 Game::Game()
@@ -108,26 +109,35 @@ bool Game::groundIsUnder() {
 	for (std::shared_ptr<Entity> mario : EntityManager::GetEntitiesGroup("Player"))
 	{
 		sf::FloatRect posMario = mario->m_sprite.getGlobalBounds();
-		//posMario.y = mario->m_sprite.getPosition().y;
 		for (std::shared_ptr<Entity> entity : EntityManager::GetEntitiesGroup("Environment"))
 		{
-			if (entity->m_type == EntityType::Ground || entity->m_type == EntityType::Ladder)
+			if (entity->m_type == EntityType::Ground)
 			{
-				//ground.x = entity->m_sprite.getPosition().x;
-				//ground.y = entity->m_sprite.getPosition().y;
-				//std::cout << (int)(ground.y - posMario.y) % 15 << "\n";
-
 				ground = entity->m_sprite.getGlobalBounds();
-
-				/*if (abs((int)(ground.y - posMario.y) % 15) == 2)
-					if(abs((int)(ground.x - posMario.x)) < 42)
-						return true;*/
 				if(ground.intersects(posMario))return true;
 			}
 		}
 	}
 	return false;
 }
+
+bool Game::isNearLadder() {
+	sf::FloatRect ground;
+	for (std::shared_ptr<Entity> mario : EntityManager::GetEntitiesGroup("Player"))
+	{
+		sf::FloatRect posMario = mario->m_sprite.getGlobalBounds();
+		for (std::shared_ptr<Entity> entity : EntityManager::GetEntitiesGroup("Environment"))
+		{
+			if (entity->m_type == EntityType::Ladder)
+			{
+				ground = entity->m_sprite.getGlobalBounds();
+				if (ground.intersects(posMario))return true;
+			}
+		}
+	}
+	return false;
+}
+
 
 
 float Game::getCountablePos(sf::Sprite sp, std::string s) {
@@ -146,34 +156,52 @@ float Game::getCountablePos(sf::Sprite sp, std::string s) {
 void Game::update(sf::Time elapsedTime)
 {
 	sf::Vector2f movement(0.f, 0.f);
-	if (mIsMovingUp)
-		movement.y -= PlayerSpeed;
-	if (mIsMovingDown)
-		movement.y += PlayerSpeed;
+	//
 	if (mIsMovingLeft)
 		movement.x -= PlayerSpeed;
 	if (mIsMovingRight)
 		movement.x += PlayerSpeed;
 
 	//gravity
-	if(!groundIsUnder())
+	if (!groundIsUnder())
+	{
+		if (mIsMovingUp)
+			movement.y -= PlayerSpeed;
 		movement.y += FallSpeed;
-	if (groundIsUnder())
-		std::cout << "SAAS" << "\n";
+	}
+
+	//Ladder movements
+	if (isNearLadder())
+	{
+		if (mIsMovingUp)
+			movement.y -= PlayerSpeed;
+		if (mIsMovingDown && !groundIsUnder())
+			movement.y += PlayerSpeed;
+	}
+
+	//Jumping
+	if (mIsJumping > 0)
+	{
+		movement.y -= JumpSpeed * mIsJumping;
+		mIsJumping--;
+	}
+
+
 
 	for (std::shared_ptr<Entity> entity : EntityManager::GetEntitiesGroup("Player"))
 	{
 		if (entity->m_enabled)
 		{
 			entity->m_sprite.move(movement * elapsedTime.asSeconds());
-			entity->m_sprite.setPosition(abs((int)entity->m_sprite.getPosition().x % 840), abs((int)entity->m_sprite.getPosition().y % 600));
+			if(entity->m_sprite.getPosition().x > 840 || entity->m_sprite.getPosition().x < 0)
+				entity->m_sprite.setPosition(abs((int)entity->m_sprite.getPosition().x % 840), entity->m_sprite.getPosition().y);
+			if(entity->m_sprite.getPosition().y > 600 || entity->m_sprite.getPosition().y < 0)
+				entity->m_sprite.setPosition(entity->m_sprite.getPosition().x, abs((int)entity->m_sprite.getPosition().y % 600));
 		}
 		
 	}
 	for (std::shared_ptr<Entity> entity : EntityManager::GetEntitiesGroup("Environment"))
 	{
-		//if(entity->m_type == EntityType::Donkey)
-		//std::cout << entity->m_type << "\n";
 	}
 	for (std::shared_ptr<Entity> entity : EntityManager::GetEntitiesGroup("Enemy"))
 	{
@@ -184,8 +212,6 @@ void Game::update(sf::Time elapsedTime)
 		else {
 
 		}
-		//if(entity->m_type == EntityType::Donkey)
-		//std::cout << entity->m_type << "\n";
 	}
 }
 
@@ -234,6 +260,7 @@ void Game::updateStatistics(sf::Time elapsedTime)
 
 void Game::handlePlayerInput(sf::Keyboard::Key key, bool isPressed)
 {
+
 	if (key == sf::Keyboard::Up)
 		mIsMovingUp = isPressed;
 	else if (key == sf::Keyboard::Down)
@@ -243,8 +270,9 @@ void Game::handlePlayerInput(sf::Keyboard::Key key, bool isPressed)
 	else if (key == sf::Keyboard::Right)
 		mIsMovingRight = isPressed;
 
-	if (key == sf::Keyboard::Space)
+	if (key == sf::Keyboard::Space && groundIsUnder())
 	{
+		mIsJumping = 40;
 	}
 }
 

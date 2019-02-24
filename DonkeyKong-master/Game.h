@@ -25,6 +25,7 @@ private:
 	void handlePlayerInput(sf::Keyboard::Key key, bool isPressed);
 
 	bool groundIsUnder();
+	bool isNearLadder();
 	std::shared_ptr<Entity> initialiseEntityClass(std::string);
 	EntityType initialiseEntityType(std::string);
 	void drawSprite();
@@ -35,6 +36,7 @@ private:
 	static const float		PlayerSpeed;
 	static const float		EnemySpeed;
 	static const float		FallSpeed;
+	static const float		JumpSpeed;
 	static const sf::Time	TimePerFrame;
 
 	sf::RenderWindow		mWindow;
@@ -49,6 +51,7 @@ private:
 	bool mIsMovingDown;
 	bool mIsMovingRight;
 	bool mIsMovingLeft;
+	int mIsJumping;
 
 	std::vector<std::string> drawables = { "Coin", "Donkey", "Flame_Enemy", "Ground", "Ladder", "Mario" };
 	std::vector<sf::Texture> textures;
