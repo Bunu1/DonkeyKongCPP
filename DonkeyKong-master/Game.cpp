@@ -23,10 +23,6 @@ Game::Game()
 	, mStatisticsText()
 	, mStatisticsUpdateTime()
 	, mStatisticsNumFrames(0)
-	, mIsMovingUp(false)
-	, mIsMovingDown(false)
-	, mIsMovingRight(false)
-	, mIsMovingLeft(false)
 {
 	mWindow.setFramerateLimit(160);
 	
@@ -36,7 +32,6 @@ Game::Game()
 	// Load Sprites, Texures and Sizes
 	for (int i = 0; i < std::size(drawables); i++)
 	{
-		std::stringstream ss;
 		sf::Texture texture;
 		texture.loadFromFile("Media/Textures/SQ" + drawables[i] + ".png");
 
@@ -51,7 +46,9 @@ Game::Game()
 		sprites.push_back(sprite);
 	}
 	drawSprite();
+	loadEndAnims();
 	// Draw Statistic Font 
+
 
 	mFont.loadFromFile("Media/Sansation.ttf");
 	mStatisticsText.setString("Welcome to Donkey Kong 1981");
@@ -167,7 +164,68 @@ bool Game::foeGravity() {
 	return false;
 }
 
+bool Game::playerVsFoe() {
+	sf::FloatRect ground;
+	for (std::shared_ptr<Entity> mario : EntityManager::GetEntitiesGroup("Player"))
+	{
+		sf::FloatRect posMario = mario->m_sprite.getGlobalBounds();
+		for (std::shared_ptr<Entity> entity : EntityManager::GetEntitiesGroup("Enemy"))
+		{
+			ground = entity->m_sprite.getGlobalBounds();
+			if (ground.intersects(posMario))return true;
+		}
+	}
+	return false;
+}
 
+bool Game::playerVsGoal() {
+	sf::FloatRect ground;
+	for (std::shared_ptr<Entity> mario : EntityManager::GetEntitiesGroup("Player"))
+	{
+		sf::FloatRect posMario = mario->m_sprite.getGlobalBounds();
+		for (std::shared_ptr<Entity> entity : EntityManager::GetEntitiesGroup("Environment"))
+		{
+			if (entity->m_type == EntityType::Coin)
+			{
+				ground = entity->m_sprite.getGlobalBounds();
+				if (ground.intersects(posMario))return true;
+			}
+		}
+	}
+	return false;
+}
+
+void Game::deathAnim() {
+	sf::FloatRect ground;
+	for (std::shared_ptr<Entity> mario : EntityManager::GetEntitiesGroup("Player"))
+	{
+		sf::FloatRect posMario = mario->m_sprite.getGlobalBounds();
+		for (std::shared_ptr<Entity> entity : EntityManager::GetEntitiesGroup("Environment"))
+		{
+			if (entity->m_type == EntityType::Coin)
+			{
+				ground = entity->m_sprite.getGlobalBounds();
+				//if (ground.intersects(posMario))
+			}
+		}
+	}
+}
+
+void Game::winAnim() {
+	sf::FloatRect ground;
+	for (std::shared_ptr<Entity> mario : EntityManager::GetEntitiesGroup("Player"))
+	{
+		sf::FloatRect posMario = mario->m_sprite.getGlobalBounds();
+		for (std::shared_ptr<Entity> entity : EntityManager::GetEntitiesGroup("Environment"))
+		{
+			if (entity->m_type == EntityType::Coin)
+			{
+				ground = entity->m_sprite.getGlobalBounds();
+				//if (ground.intersects(posMario))
+			}
+		}
+	}
+}
 
 float Game::getCountablePos(sf::Sprite sp, std::string s) {
 	sf::Vector2f position = sp.getPosition();
@@ -185,9 +243,12 @@ float Game::getCountablePos(sf::Sprite sp, std::string s) {
 void Game::update(sf::Time elapsedTime)
 {
 	sf::Vector2f movement(0.f, 0.f);
-
 	sf::Vector2f movementFoe(0.f, 0.f);
-	//gravity
+	sf::Vector2f movementDonkey(0.f, 0.f);
+
+	if (playerVsFoe())std::cout << "ded" << "\n";
+	if (playerVsGoal())std::cout << "win" << "\n";
+	//gravity Mario
 	if (!groundIsUnder())
 	{
 		if (mIsMovingUp)
@@ -195,18 +256,13 @@ void Game::update(sf::Time elapsedTime)
 		movement.y += FallSpeed;
 	}
 
-	//foeGravity
-	/*if (!foeGravity())
-	{
-		movementFoe.y += FallSpeed;
-	}*/
-
+	//Mario movement
 	if (mIsMovingLeft)
 		movement.x -= PlayerSpeed;
 	if (mIsMovingRight)
 		movement.x += PlayerSpeed;
 
-	//Ladder movements
+	//Ladder movements Mario
 	if (isNearLadder())
 	{
 		if (mIsMovingUp)
@@ -215,18 +271,76 @@ void Game::update(sf::Time elapsedTime)
 			movement.y += PlayerSpeed;
 	}
 
-	//Jumping
+	//Jumping Mario
 	if (mIsJumping > 0)
 	{
 		movement.y -= JumpSpeed * mIsJumping;
 		mIsJumping--;
 	}
 
+	//Donkey Jumping
+	if (dJumping > 0)
+	{
+		if (dJumping > 20) 
+		{
+			movementDonkey.y -= JumpSpeed * (dJumping-20);
+		}
+		else {
+			movementDonkey.y += JumpSpeed * (dJumping);
+		}
+
+		dJumping--;
+	}
+	else {
+		dJumping = 40;
+	}
+
+	//foeMovement
+	if (foeLoop > 0)
+	{
+		if (foeLoop > 80)
+		{
+			if (foeLoop > 120)
+			{
+				movementFoe.y += JumpSpeed / 4 * (foeLoop - 120);
+			}
+			else
+			{
+				movementFoe.y -= JumpSpeed / 4 * (foeLoop - 80);
+			}
+			movementFoe.x -= JumpSpeed/2 * (foeLoop - 80);
+		}
+		else {
+			if (foeLoop > 40)
+			{
+				movementFoe.y -= JumpSpeed / 4 * (foeLoop - 40);
+			}
+			else
+			{
+				movementFoe.y += JumpSpeed / 4 * foeLoop ;
+			}
+			movementFoe.x += JumpSpeed/2 * (foeLoop);
+		}
+
+		foeLoop--;
+	}
+	else {
+		foeLoop = 160;
+	}
 
 	for (std::shared_ptr<Entity> entity : EntityManager::GetEntitiesGroup("Player"))
 	{
 		if (entity->m_enabled)
 		{
+
+			entity->m_sprite.setOrigin({ entity->m_sprite.getLocalBounds().width / 2, 0 });
+			if (mIsMovingLeft) {
+				entity->m_sprite.setScale({ -1, 1 });
+			}
+			if (mIsMovingRight) {
+				entity->m_sprite.setScale({ 1, 1 });
+			}
+
 			entity->m_sprite.move(movement * elapsedTime.asSeconds());
 			if(entity->m_sprite.getPosition().x > 840 || entity->m_sprite.getPosition().x < 0)
 				entity->m_sprite.setPosition(abs((int)entity->m_sprite.getPosition().x % 840), entity->m_sprite.getPosition().y);
@@ -239,18 +353,10 @@ void Game::update(sf::Time elapsedTime)
 	{
 		if (entity->m_type == EntityType::Donkey)
 		{
-
+			entity->m_sprite.move(movementDonkey * elapsedTime.asSeconds());
 		}
 		else {
-			/*if (rand()%2 == 0)
-				movementFoe.x += EnemySpeed * (0.8 + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (1.6 - 0.4))));
-			else
-				movementFoe.x -= EnemySpeed * (0.4 + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (1.6 - 0.4))));
 			entity->m_sprite.move(movementFoe * elapsedTime.asSeconds());
-			if (entity->m_sprite.getPosition().x > 840 || entity->m_sprite.getPosition().x < 0)
-				entity->m_sprite.setPosition(abs((int)entity->m_sprite.getPosition().x % 840), entity->m_sprite.getPosition().y);
-			if (entity->m_sprite.getPosition().y > 600 || entity->m_sprite.getPosition().y < 0)
-				entity->m_sprite.setPosition(entity->m_sprite.getPosition().x, abs((int)entity->m_sprite.getPosition().y % 600));*/
 		}
 	}
 }
@@ -470,4 +576,38 @@ void Game::drawSprite()
 			}
 		}
 	}
+
+	
+
+}
+
+void Game::loadEndAnims()
+{
+	sf::Texture texture;
+	sf::Sprite sprite;
+	sf::Vector2u size;
+
+	/*texture.loadFromFile("Media/Textures/SQend.png");
+	size = texture.getSize();
+	sprite.setTexture(texture);*/
+
+	//std::shared_ptr<class Environment> se = std::make_shared<class Environment>();
+	/*sprite.setPosition(0, 0);
+	se->m_sprite = sprite;
+	se->m_type = EntityType::Environment;
+	se->m_size = size;
+	se->m_position = sprite.getPosition();
+	EntityManager::m_Entities.push_back(se);*/
+
+
+	/*texture.loadFromFile("Media/Textures/SQend.jpg");
+	size = texture.getSize();
+
+	sprite.setTexture(texture);
+	sprite.setPosition(10.f, 10.f);
+	se->m_sprite = sprite;
+	se->m_type = EntityType::Environment;
+	se->m_size = texture.getSize();
+	se->m_position = sprite.getPosition();
+	EntityManager::m_Entities.push_back(se);*/
 }

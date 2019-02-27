@@ -27,9 +27,14 @@ private:
 	bool groundIsUnder();
 	bool isNearLadder();
 	bool foeGravity();
+	bool playerVsFoe();
+	bool playerVsGoal();
+	void deathAnim();
+	void winAnim();
 	std::shared_ptr<Entity> initialiseEntityClass(std::string);
 	EntityType initialiseEntityType(std::string);
 	void drawSprite();
+	void loadEndAnims();
 	void setLayout();
 	float getCountablePos(sf::Sprite, std::string);
 
@@ -53,6 +58,8 @@ private:
 	bool mIsMovingRight;
 	bool mIsMovingLeft;
 	int mIsJumping;
+	int dJumping;
+	int foeLoop;
 
 	std::vector<std::string> drawables = { "Coin", "Donkey", "Flame_Enemy", "Ground", "Ladder", "Mario" };
 	std::vector<sf::Texture> textures;
