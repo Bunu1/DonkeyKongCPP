@@ -41,7 +41,7 @@ std::vector<std::shared_ptr<Entity>> EntityManager::GetEntitiesGroup(std::string
 		}
 		if (s == "Environment")
 		{
-			if (entity->m_type == EntityType::Ground || entity->m_type == EntityType::Ladder || entity->m_type == EntityType::Coin )
+			if (entity->m_type == EntityType::Ground || entity->m_type == EntityType::Ladder || entity->m_type == EntityType::Coin || entity->m_type == EntityType::Ends)
 			{
 				ents.push_back(entity);
 			}

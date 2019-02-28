@@ -10,7 +10,8 @@ enum EntityType
 	Flame_Enemy,
 	Ground,
 	Ladder,
-	Mario
+	Mario,
+	Ends
 };
 
 

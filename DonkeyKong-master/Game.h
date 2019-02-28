@@ -29,8 +29,8 @@ private:
 	bool foeGravity();
 	bool playerVsFoe();
 	bool playerVsGoal();
-	void deathAnim();
-	void winAnim();
+	void deathAnim(sf::Time);
+	void winAnim(sf::Time);
 	std::shared_ptr<Entity> initialiseEntityClass(std::string);
 	EntityType initialiseEntityType(std::string);
 	void drawSprite();
@@ -57,6 +57,7 @@ private:
 	bool mIsMovingDown;
 	bool mIsMovingRight;
 	bool mIsMovingLeft;
+	bool gameEnded;
 	int mIsJumping;
 	int dJumping;
 	int foeLoop;
